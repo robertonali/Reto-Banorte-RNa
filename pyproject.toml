@@ -1,0 +1,31 @@
+[project]
+name = "reto-banorte-agente-cv"
+version = "0.1.0"
+description = "Agente de CV compatible con Open Responses para el Reto IA Banorte."
+requires-python = ">=3.13"
+dependencies = [
+    "anthropic>=2.3.0",
+    "fastapi>=0.161",
+    "openai>=3.37.0",
+    "psycopg-pool>=3.3.3",
+    "psycopg[binary]>=3.3.6",
+    "pydantic-settings>=2.16",
+    "pyyaml>=6.0.3",
+    "uvicorn[standard]>=0.54",
+]
+
+[dependency-groups]
+dev = [
+    "pypdf>=6.21.2",
+    "pytest>=9.1",
+]
+evals = [
+    "mlflow>=3.17.2",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

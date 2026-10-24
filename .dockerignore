@@ -1,0 +1,20 @@
+# No meter a la imagen nada personal ni de desarrollo.
+private/
+.env
+.env.*
+*.tex
+*.ipynb
+.git/
+.githooks/
+.github/
+.idea/
+.venv/
+__pycache__/
+.pytest_cache/
+mlruns/
+mlartifacts/
+data/
+docs/
+evals/
+tests/
+scripts/

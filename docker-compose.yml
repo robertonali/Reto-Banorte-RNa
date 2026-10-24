@@ -1,0 +1,31 @@
+# Levantar un entorno local parecido a producción: la imagen de Render + Postgres.
+#   docker compose up --build
+# Montar el perfil real desde private/ (nunca entra a la imagen).
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: agente
+      POSTGRES_PASSWORD: agente
+      POSTGRES_DB: agente_cv
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agente -d agente_cv"]
+      interval: 2s
+      retries: 15
+
+  app:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://agente:agente@db:5432/agente_cv
+      PROFILE_PATH: /etc/secrets/profile.yaml
+    volumes: ["./private/profile.yaml:/etc/secrets/profile.yaml:ro"]
+    ports: ["8080:10000"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

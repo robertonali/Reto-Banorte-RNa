@@ -1,0 +1,47 @@
+# Blueprint de Render: el servicio web (Docker) y su base Postgres, declarados como código.
+# Pasos manuales después de crear el Blueprint (ver README → Despliegue):
+#   1. Capturar ANTHROPIC_API_KEY y OPENAI_API_KEY.
+#   2. Subir private/profile.yaml como Secret File llamado "profile.yaml".
+#   3. Copiar el valor generado de AGENT_API_KEY a la plataforma del reto.
+
+services:
+  - type: web
+    name: agente-cv
+    runtime: docker
+    # Instancia de pago mínima: el plan "free" se duerme tras inactividad y el primer
+    # mensaje del evaluador tardaría cerca de un minuto (o fallaría por timeout).
+    plan: 0.5c-512mb
+    region: virginia
+    healthCheckPath: /health
+    # Desplegar solo cuando pasen los tests de GitHub Actions.
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: AGENT_API_KEY
+        generateValue: true # Render genera una key aleatoria de 256 bits
+      - key: ANTHROPIC_API_KEY
+        sync: false # capturarla en el dashboard, nunca en git
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: LLM_MODEL
+        value: claude-haiku-5-5 # elegido con los evals (docs/decisions.md §5)
+      - key: LLM_FALLBACK_MODEL
+        value: gpt-6.1-sol # otro proveedor: responde si Anthropic falla
+      - key: CONTEXT_STRATEGY
+        value: completo
+      - key: PROFILE_PATH
+        value: /etc/secrets/profile.yaml
+      - key: DATABASE_URL
+        fromDatabase:
+          name: agente-cv-db
+          property: connectionString
+
+databases:
+  - name: agente-cv-db
+    # El plan free de Postgres caduca; si la base no está disponible, el servicio sigue
+    # funcionando con conversaciones en memoria (ver app/main.py).
+    plan: free
+    region: virginia
+    databaseName: agente_cv
+    user: agente

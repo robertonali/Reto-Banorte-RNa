@@ -1,0 +1,67 @@
+# Perfil de EJEMPLO con datos ficticios, para mostrar el formato que espera app/profile.py.
+# El perfil real vive en private/profile.yaml (fuera de git) o en un Secret File de Render.
+
+nombre: Ana Ejemplo
+titular: Ingeniera de Machine Learning — sistemas de recomendación y MLOps
+ubicacion: Monterrey, México
+
+resumen: |
+  Ingeniera de Machine Learning con experiencia construyendo sistemas de recomendación en
+  producción y pipelines de MLOps. Licenciada en Ciencias de la Computación.
+
+contacto:
+  email: ana.ejemplo@example.com
+  linkedin: https://www.linkedin.com/in/ana-ejemplo
+  github: https://github.com/ana-ejemplo
+
+experiencia:
+  - id: tienda-ml
+    puesto: ML Engineer
+    empresa: Tienda Ficticia S.A.
+    inicio: marzo 2023
+    fin: null
+    modalidad: Híbrido
+    descripcion: >-
+      Built and deployed a product recommendation system serving 1M users. Owned the training
+      pipeline on Airflow and model monitoring with MLflow.
+    tecnologias: [Python, PyTorch, Airflow, MLflow, AWS]
+
+  - id: consultora-datos
+    puesto: Data Scientist
+    empresa: Consultora Imaginaria
+    inicio: enero 2021
+    fin: febrero 2023
+    descripcion: >-
+      Demand forecasting models for retail clients. Reduced forecast error by 15%.
+    tecnologias: [Python, scikit-learn, SQL]
+
+educacion:
+  - grado: Licenciatura en Ciencias de la Computación
+    institucion: Universidad de Ejemplo
+    inicio: agosto 2016
+    fin: diciembre 2020
+
+habilidades:
+  Lenguajes: [Python, SQL]
+  Machine Learning: [PyTorch, scikit-learn, sistemas de recomendación]
+  MLOps: [MLflow, Airflow, Docker]
+
+proyectos:
+  - id: recomendador
+    nombre: Recomendador de productos
+    contexto: Tienda Ficticia S.A.
+    fecha: "2024"  # entre comillas: sin ellas YAML lo lee como número
+    resumen: Sistema de recomendación con filtrado colaborativo y re-ranking en tiempo real.
+    tecnologias: [PyTorch, Redis, FastAPI]
+    detalle: |
+      Modelo de dos torres entrenado diariamente; re-ranking en tiempo real con Redis.
+      Mejoró la tasa de conversión 8% en una prueba A/B de 4 semanas.
+
+logros:
+  - "2022: primer lugar en un hackathon interno de IA."
+
+cursos: [Deep Learning, MLOps]
+
+idiomas:
+  - Español (nativo)
+  - Inglés (avanzado)

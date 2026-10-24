@@ -1,0 +1,33 @@
+# Secretos y datos personales: nunca subirlos
+.env
+.env.*
+!.env.example
+private/
+*.tex
+RobertoNajera_BusquedaDeTalento.ipynb
+
+# Entorno y editor
+.venv/
+venv/
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# MLflow (corridas locales de evals)
+mlruns/
+mlartifacts/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

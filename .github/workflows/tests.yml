@@ -1,0 +1,17 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --frozen
+      # Revisar que ningún archivo personal llegue al repo, aunque alguien se salte el hook local.
+      - run: uv run python scripts/check_sensitive.py --all
+      # Los tests usan el perfil de ejemplo y un LLM falso: no necesitan keys ni cuestan dinero.
+      - run: uv run pytest -q
