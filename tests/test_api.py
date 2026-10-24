@@ -41,10 +41,11 @@ def test_sin_key_devuelve_401_con_formato_de_la_spec(client):
     }
 
 
-def test_acepta_bearer_y_x_api_key(client):
+def test_solo_acepta_bearer(client):
+    # La plataforma usa Authorization: Bearer (confirmado en los logs de Render).
     assert client.post("/v1/responses", json={"input": "hola"}, headers=AUTH).status_code == 200
-    assert client.post("/v1/responses", json={"input": "hola"}, headers={"x-api-key": "clave-de-prueba"}).status_code == 200
     assert client.post("/v1/responses", json={"input": "hola"}, headers={"Authorization": "Bearer otra"}).status_code == 401
+    assert client.post("/v1/responses", json={"input": "hola"}, headers={"x-api-key": "clave-de-prueba"}).status_code == 401
 
 
 def test_respuesta_sin_streaming_cumple_la_spec(client):
@@ -140,6 +141,17 @@ def test_guardrails_de_entrada(client):
     assert largo.status_code == 400 and largo.json()["error"]["code"] == "invalid_input"
     sin_usuario = client.post("/v1/responses", json={"input": []}, headers=AUTH)
     assert sin_usuario.status_code == 400
+
+
+def test_conversacion_larga_se_recorta_en_vez_de_fallar(client, fake):
+    # Así llama la plataforma: historial completo en cada turno. 45 mensajes rebasan el límite de 40.
+    historial = [
+        {"role": "user" if i % 2 == 0 else "assistant", "content": f"mensaje {i}"} for i in range(45)
+    ]
+    r = client.post("/v1/responses", json={"input": historial, "stream": True}, headers=AUTH)
+    assert r.status_code == 200
+    enviados = fake.calls[-1]["messages"]
+    assert len(enviados) == 39 and enviados[0].role == "user" and enviados[-1].content == "mensaje 44"
 
 
 def test_falla_del_modelo_sin_streaming(client, fake):

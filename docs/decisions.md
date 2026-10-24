@@ -25,7 +25,22 @@ completo o un `previous_response_id`, ni el timeout.
 `in_progress` → `output_item.added` → `content_part.added` → deltas → `output_text.done` →
 `content_part.done` → `output_item.done` → `response.completed`), los números de secuencia, que los
 deltas sumen el texto final, y el par `error` + `response.failed` cuando falla el modelo. Además, cada
-request registra su *forma* para confirmar el contrato real de la plataforma una vez registrado el agente.
+request registra su *forma* (nunca su contenido) para confirmar el contrato real de la plataforma.
+
+**Contrato confirmado en producción.** Los logs de Render, con el agente ya registrado en la plataforma, mostraron:
+
+| Campo | Valor observado | Consecuencia |
+|---|---|---|
+| `stream` | `true` en todos los requests | La ruta SSE es la que usa la plataforma. |
+| `input` | lista con **todo el historial** (1, 3, 5… 15 items) | Hace falta recortar el historial, no rechazarlo (ver sección 6). |
+| `previous_response_id` | nunca se envía | Postgres no es necesario para esta plataforma (ver sección 8). |
+| `instructions` | nunca se envía | Solo aplican las reglas del agente. |
+| Autenticación | `Authorization: Bearer` | Se quitó la alternativa `x-api-key`. |
+| Cliente | `Bun/1.3.14` | — |
+
+En producción respondió 8/8 requests con 200, con latencia de 0.6–2 s, 4,597 tokens de caché en cada
+request y 0.0001–0.0004 USD por respuesta. Es un buen ejemplo de para qué sirve la observabilidad:
+el diseño soportaba todas las variantes, y los datos reales dijeron qué partes importaban.
 
 ## 2. Contexto: perfil completo en el prompt (RAG descartado con datos)
 
@@ -142,7 +157,8 @@ jueces) costaron ~3.6 USD. Los jueces costaron más que los agentes evaluados.
 | Datos personales | **Privacidad por construcción:** el agente solo ve el perfil, y el perfil solo contiene lo que Roberto decidió compartir. No hace falta filtrar la salida. |
 | Prompt injection | Reglas de seguridad en el prompt, más detección heurística (`guardrails.py`) que **no bloquea** (habría falsos positivos), pero agrega un recordatorio en la parte dinámica del prompt y lo registra en el log. Los evals tienen 3 casos de injection. |
 | Instrucciones del cliente | `instructions` y los mensajes system/developer van a la parte dinámica como "preferencias de tono y formato", con menor prioridad que las reglas. |
-| Abuso / costo | API key obligatoria en producción, rate limit por IP, límite de caracteres por mensaje y de mensajes por conversación, máximo 4 rondas de herramientas y timeouts. |
+| Abuso / costo | API key obligatoria en producción, rate limit por IP, límite de caracteres por mensaje del usuario, máximo 4 rondas de herramientas y timeouts. |
+| Conversaciones largas | La plataforma reenvía todo el historial, así que cada turno suma 2 mensajes. Con un límite que rechazara, el chat se rompería en la pregunta 21. El historial se **recorta** a los 40 mensajes más recientes (empezando por uno del usuario), así el chat nunca falla y el costo por request queda acotado. |
 | Temas delicados | Salario, motivos de cambio y disponibilidad: el agente redirige a Roberto. |
 
 ## 7. Evals: golden set, panel de jueces y MLflow
@@ -162,6 +178,10 @@ jueces) costaron ~3.6 USD. Los jueces costaron más que los agentes evaluados.
   sabían que el agente recibe la fecha de hoy. Se corrigió la rúbrica en la v2.
 
 ## 8. Estado de conversación y degradación elegante
+
+**En producción, sin Postgres.** Los logs mostraron que la plataforma manda el historial completo y
+nunca usa `previous_response_id` (sección 1), así que el despliegue no usa la base: una pieza menos
+que operar y pagar. El soporte queda en el código para clientes que sí lo usen.
 
 `previous_response_id` exige recuperar la conversación anterior, así que hace falta guardarla. Opciones:
 - **Memoria:** se pierde en cada deploy o reinicio.

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from app.agent.guardrails import GuardrailError, injection_signals, validate_conversation
+from app.agent.guardrails import GuardrailError, injection_signals, trim_history, validate_conversation
 from app.agent.prompts import build_system
 from app.agent.tools import build_tools
 from app.llm.base import Message, Usage, cost_usd
@@ -50,14 +50,27 @@ def test_herramientas(profile):
 
 
 def test_validate_conversation():
-    ok = [Message("user", "hola")]
-    validate_conversation(ok, max_message_chars=100, max_history_messages=10)
+    validate_conversation([Message("user", "hola")], max_message_chars=100)
+    # Una respuesta larga del asistente en el historial no rompe la conversación.
+    validate_conversation(
+        [Message("user", "hola"), Message("assistant", "x" * 500), Message("user", "¿y?")], max_message_chars=100
+    )
     with pytest.raises(GuardrailError):
-        validate_conversation([Message("assistant", "hola")], max_message_chars=100, max_history_messages=10)
+        validate_conversation([Message("assistant", "hola")], max_message_chars=100)
     with pytest.raises(GuardrailError):
-        validate_conversation([Message("user", "x" * 101)], max_message_chars=100, max_history_messages=10)
+        validate_conversation([Message("user", "x" * 101)], max_message_chars=100)
     with pytest.raises(GuardrailError):
-        validate_conversation(ok * 11, max_message_chars=100, max_history_messages=10)
+        validate_conversation([Message("user", "   ")], max_message_chars=100)
+
+
+def test_trim_history():
+    conversacion = [Message("user" if i % 2 == 0 else "assistant", f"m{i}") for i in range(45)]
+    recortada = trim_history(conversacion, 40)
+    # Se queda con los más recientes y descarta el que dejaría al asistente al inicio.
+    assert len(recortada) == 39 and recortada[0].role == "user" and recortada[-1].content == "m44"
+    assert trim_history(conversacion[:3], 40) == conversacion[:3]  # sin cambios si cabe
+    saludo = [Message("assistant", "¡Hola!"), Message("user", "hola")]
+    assert trim_history(saludo, 40) == [Message("user", "hola")]
 
 
 @pytest.mark.parametrize(

@@ -32,7 +32,7 @@ flowchart LR
 
 Cómo se atiende un request:
 
-1. `auth.py` valida la API key (`Authorization: Bearer` o `x-api-key`) y `ratelimit.py` limita los requests por minuto.
+1. `auth.py` valida la API key (`Authorization: Bearer`) y `ratelimit.py` limita los requests por minuto.
 2. `api/responses.py` convierte `input` (texto o historial) en mensajes. Si llega `previous_response_id`,
    carga la conversación guardada. Los mensajes `system`/`developer` del cliente se tratan como
    preferencias de estilo, con menor prioridad que las reglas del agente.
@@ -160,7 +160,8 @@ El servicio despliega solo cuando los tests de GitHub Actions pasan (`autoDeploy
 - **Privacidad por construcción:** el agente solo ve el perfil, y el perfil solo contiene lo que se decidió compartir.
 - **Auth:** en producción, el servicio no arranca sin `AGENT_API_KEY`. La comparación de la key tarda
   lo mismo sin importar dónde difiera, así que no se puede adivinar midiendo tiempos.
-- **Abuso y costo:** rate limit por IP, límites de tamaño de entrada, máximo de rondas de herramientas y timeouts.
+- **Abuso y costo:** rate limit por IP, límite de tamaño de los mensajes del usuario, historial recortado
+  a los 40 mensajes más recientes (una conversación larga no falla), máximo de rondas de herramientas y timeouts.
 - **Prompt injection:** reglas explícitas en el prompt y detección heurística que refuerza las reglas
   y queda registrada en los logs. Los evals miden la resistencia.
 

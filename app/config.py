@@ -41,7 +41,7 @@ class Settings(BaseSettings):
 
     # Límites de entrada y de uso
     max_message_chars: int = 4000
-    max_history_messages: int = 40
+    max_history_messages: int = 40  # si la conversación es más larga, recortar los mensajes más antiguos
     rate_limit_per_minute: int = 30
 
     @model_validator(mode="after")

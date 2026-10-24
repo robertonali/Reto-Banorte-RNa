@@ -215,12 +215,11 @@ async def create_response(
         history = stored
 
     new_messages, input_instructions = normalize_input(body.input)
-    messages = history + new_messages
-    while messages and messages[0].role == "assistant":
-        messages.pop(0)  # quitar saludos iniciales del asistente: Claude exige empezar con el usuario
-    guardrails.validate_conversation(
-        messages, max_message_chars=settings.max_message_chars, max_history_messages=settings.max_history_messages
-    )
+    full_history = history + new_messages
+    messages = guardrails.trim_history(full_history, settings.max_history_messages)
+    if len(messages) < len(full_history):
+        logger.info("Historial recortado: %d -> %d mensajes", len(full_history), len(messages))
+    guardrails.validate_conversation(messages, max_message_chars=settings.max_message_chars)
     client_instructions = "\n\n".join(x for x in [body.instructions, *input_instructions] if x) or None
 
     turn = _Turn(body, agent)
